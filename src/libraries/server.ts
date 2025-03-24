@@ -52,15 +52,15 @@ function proxyRequest(req, res, proxy) {
         // HACK: Get hold of the proxyReq object, because we need it later.
         // https://github.com/nodejitsu/node-http-proxy/blob/v1.11.1/lib/http-proxy/passes/web-incoming.js#L144
         buffer: {
-            pipe: function (proxyReq) {
+            pipe: function(proxyReq) {
                 const proxyReqOn = proxyReq.on;
                 // Intercepts the handler that connects proxyRes to res.
                 // https://github.com/nodejitsu/node-http-proxy/blob/v1.11.1/lib/http-proxy/passes/web-incoming.js#L146-L158
-                proxyReq.on = function (eventName, listener) {
+                proxyReq.on = function(eventName, listener) {
                     if (eventName !== "response") {
                         return proxyReqOn.call(this, eventName, listener);
                     }
-                    return proxyReqOn.call(this, "response", function (proxyRes) {
+                    return proxyReqOn.call(this, "response", function(proxyRes) {
                         if (onProxyResponse(proxy, proxyReq, proxyRes, req, res)) {
                             try {
                                 listener(proxyRes);
@@ -139,7 +139,7 @@ function onProxyResponse(proxy, proxyReq, proxyRes, req, res) {
                     // may occur after aborting a request does not propagate to res.
                     // https://github.com/nodejitsu/node-http-proxy/blob/v1.11.1/lib/http-proxy/passes/web-incoming.js#L134
                     proxyReq.removeAllListeners("error");
-                    proxyReq.once("error", function catchAndIgnoreError() {});
+                    proxyReq.once("error", function catchAndIgnoreError() { });
                     proxyReq.abort();
 
                     // Initiate a new proxy request.
@@ -204,7 +204,7 @@ function getHandler(options, proxy) {
         corsMaxAge: 0, // If set, an Access-Control-Max-Age header with this value (in seconds) will be added.
     };
 
-    Object.keys(corsAnywhere).forEach(function (option) {
+    Object.keys(corsAnywhere).forEach(function(option) {
         if (Object.prototype.hasOwnProperty.call(options, option)) {
             corsAnywhere[option] = options[option];
         }
@@ -217,21 +217,21 @@ function getHandler(options, proxy) {
         } else if (!Array.isArray(corsAnywhere.requireHeader) || (corsAnywhere as any).requireHeader.length === 0) {
             corsAnywhere.requireHeader = null;
         } else {
-            corsAnywhere.requireHeader = (corsAnywhere.requireHeader as any).map(function (headerName) {
+            corsAnywhere.requireHeader = (corsAnywhere.requireHeader as any).map(function(headerName) {
                 return headerName.toLowerCase();
             });
         }
     }
-    const hasRequiredHeaders = function (headers) {
+    const hasRequiredHeaders = function(headers) {
         return (
             !corsAnywhere.requireHeader ||
-            (corsAnywhere.requireHeader as any).some(function (headerName) {
+            (corsAnywhere.requireHeader as any).some(function(headerName) {
                 return Object.hasOwnProperty.call(headers, headerName);
             })
         );
     };
 
-    return function (req, res) {
+    return function(req, res) {
         req.corsAnywhereRequestState = {
             getProxyForUrl: corsAnywhere.getProxyForUrl,
             maxRedirects: corsAnywhere.maxRedirects,
@@ -362,11 +362,11 @@ function getHandler(options, proxy) {
         const isRequestedOverHttps = req.connection.encrypted || /^\s*https/.test(req.headers["x-forwarded-proto"]);
         const proxyBaseUrl = (isRequestedOverHttps ? "https://" : "http://") + req.headers.host;
 
-        corsAnywhere.removeHeaders.forEach(function (header) {
+        corsAnywhere.removeHeaders.forEach(function(header) {
             delete req.headers[header];
         });
 
-        Object.keys(corsAnywhere.setHeaders).forEach(function (header) {
+        Object.keys(corsAnywhere.setHeaders).forEach(function(header) {
             req.headers[header] = corsAnywhere.setHeaders[header];
         });
 
@@ -389,7 +389,7 @@ function createServer(options) {
     };
     // Allow user to override defaults and add own options
     if (options.httpProxyOptions) {
-        Object.keys(options.httpProxyOptions).forEach(function (option) {
+        Object.keys(options.httpProxyOptions).forEach(function(option) {
             httpProxyOptions[option] = options.httpProxyOptions[option];
         });
     }
@@ -404,7 +404,7 @@ function createServer(options) {
     }
 
     // When the server fails, just show a 404 instead of Internal server error
-    proxyServer.on("error", function (err, req, res) {
+    proxyServer.on("error", function(err, req, res) {
         if (res.headersSent) {
             // This could happen when a protocol error occurs when an error occurs
             // after the headers have been received (and forwarded). Do not write
@@ -420,7 +420,7 @@ function createServer(options) {
         // When the error occurs after setting headers but before writing the response,
         // then any previously set headers must be removed.
         const headerNames = res.getHeaderNames ? res.getHeaderNames() : Object.keys(res._headers || {});
-        headerNames.forEach(function (name) {
+        headerNames.forEach(function(name) {
             res.removeHeader(name);
         });
 
@@ -469,7 +469,7 @@ export default function server() {
             // Do not add X-Forwarded-For, etc. headers, because Heroku already adds it.
             xfwd: false,
         },
-    }).listen(port, Number(host), function () {
+    }).listen(port, Number(host), function() {
         console.log(colors.green("Server running on ") + colors.blue(`${web_server_url}`));
     });
 }
@@ -496,7 +496,7 @@ function createRateLimitChecker(CORSANYWHERE_RATELIMIT) {
     const rateLimitConfig = /^(\d+) (\d+)(?:\s*$|\s+(.+)$)/.exec(CORSANYWHERE_RATELIMIT);
     if (!rateLimitConfig) {
         // No rate limit by default.
-        return function checkRateLimit() {};
+        return function checkRateLimit() { };
     }
     const maxRequestsPerPeriod = parseInt(rateLimitConfig[1]);
     const periodInMinutes = parseInt(rateLimitConfig[2]);
@@ -506,7 +506,7 @@ function createRateLimitChecker(CORSANYWHERE_RATELIMIT) {
         unlimitedPattern
             .trim()
             .split(/\s+/)
-            .forEach(function (unlimitedHost, i) {
+            .forEach(function(unlimitedHost, i) {
                 const startsWithSlash = unlimitedHost.charAt(0) === "/";
                 const endsWithSlash = unlimitedHost.slice(-1) === "/";
                 if (startsWithSlash || endsWithSlash) {
@@ -527,7 +527,7 @@ function createRateLimitChecker(CORSANYWHERE_RATELIMIT) {
     }
 
     let accessedHosts = Object.create(null);
-    setInterval(function () {
+    setInterval(function() {
         accessedHosts = Object.create(null);
     }, periodInMinutes * 60000);
 
@@ -638,23 +638,12 @@ export async function proxyM3U8(url: string, headers: any, res: http.ServerRespo
  * @param res Server response object
  */
 export async function proxyTs(url: string, headers: any, req, res: http.ServerResponse) {
-    // I love how NodeJS HTTP request client only takes http URLs :D It's so fun!
-    // I'll probably refactor this later.
-
-    let forceHTTPS = false;
-
-    if (url.startsWith("https://")) {
-        forceHTTPS = true;
-    }
-
+    let forceHTTPS = url.startsWith("https://");
     const uri = new URL(url);
 
-    // Options
-    // It might be worth adding ...req.headers to the headers object, but once I did that
-    // the code broke and I receive errors such as "Cannot access direct IP" or whatever.
     const options = {
         hostname: uri.hostname,
-        port: uri.port,
+        port: uri.port || (forceHTTPS ? 443 : 80),
         path: uri.pathname + uri.search,
         method: req.method,
         headers: {
@@ -663,37 +652,43 @@ export async function proxyTs(url: string, headers: any, req, res: http.ServerRe
         },
     };
 
-    // Proxy request and pipe to client
     try {
-        if (forceHTTPS) {
-            const proxy = https.request(options, (r) => {
-                r.headers["content-type"] = "video/mp2t";
-                res.writeHead(r.statusCode ?? 200, r.headers);
+        const requestModule = forceHTTPS ? https : http;
+        const proxy = requestModule.request(options, (r) => {
+            r.headers["content-type"] = "video/mp2t";
+            res.writeHead(r.statusCode ?? 200, r.headers);
+            r.pipe(res, { end: true });
+        });
 
-                r.pipe(res, {
-                    end: true,
-                });
-            });
+        // Handle errors on the proxy request
+        proxy.on("error", (err) => {
+            console.error(`${forceHTTPS ? "HTTPS" : "HTTP"} proxy request error:`, err);
+            if (!res.headersSent) {
+                res.writeHead(500, { "Content-Type": "text/plain" });
+                res.end(`Proxy request error: ${err.message}`);
+            } else {
+                res.end(); // Close the response if headers are already sent
+            }
+        });
 
-            req.pipe(proxy, {
-                end: true,
-            });
-        } else {
-            const proxy = http.request(options, (r) => {
-                r.headers["content-type"] = "video/mp2t";
-                res.writeHead(r.statusCode ?? 200, r.headers);
+        // Set a timeout (e.g., 30 seconds)
+        proxy.setTimeout(30000, () => {
+            proxy.destroy(); // Abort the request
+            if (!res.headersSent) {
+                res.writeHead(504, { "Content-Type": "text/plain" });
+                res.end("Gateway Timeout: The upstream server took too long to respond");
+            } else {
+                res.end();
+            }
+        });
 
-                r.pipe(res, {
-                    end: true,
-                });
-            });
-            req.pipe(proxy, {
-                end: true,
-            });
+        // Pipe the client request to the proxy request
+        req.pipe(proxy, { end: true });
+    } catch (e) {
+        console.error("Synchronous error in proxyTs:", e);
+        if (!res.headersSent) {
+            res.writeHead(500, { "Content-Type": "text/plain" });
+            res.end(`Server error: ${e}`);
         }
-    } catch (e: any) {
-        res.writeHead(500);
-        res.end(e.message);
-        return null;
     }
 }
